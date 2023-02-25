@@ -38,7 +38,7 @@ String TileMap[H] = {
 	"W                                   BW                                         W",
 	"W                      BW                                                      W",
 	"W                                                                              W",
-	"W                                                                              W",
+	"W                                       BW                                     W",
 	"BWBWBWHWBWBWBWBWBWBWBWBWBWBWHWHWHWBWBWBWBWBWHWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBW",
 };
 
@@ -51,12 +51,14 @@ public:
 	bool onGround;
 	Sprite sprite;
 	float currentFrame;
+	int fall = 1;
 
 	PLAYER(Texture& image) {
 		sprite.setTexture(image);
 		rect = FloatRect(50, 250, 40, 45);
 		dx = dy = 0;
 		currentFrame = 0;
+		
 	}
 
 	void update(float time) {
@@ -65,19 +67,35 @@ public:
 		if (!onGround) dy = dy + 0.0005 * time;
 		rect.top += dy * time;
 		onGround = false;																				
-		Collision(1);																					
+		Collision(1);
 																										
-		currentFrame += 0.005 * time;																	
-		if (currentFrame > 10) currentFrame -= 8;
-
-		if (dx > 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame), 295, 40, 40)); last_dir = 'r'; };
-		if (dx < 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame) + 40, 295, -40, 40)); last_dir = 'l'; };
-		if (!dx && last_dir == 'r') sprite.setTextureRect(IntRect(45, 25, 30, 40));
-		if (!dx && last_dir == 'l' ) sprite.setTextureRect(IntRect(45+30, 25, -30, 40));
-		if (dy != 0 && last_dir == 'r') sprite.setTextureRect(IntRect(40, 650, 30, 40));
-		if (dy != 0 && last_dir == 'l') sprite.setTextureRect(IntRect(40+30, 650, -30, 40));
-
-
+		currentFrame += 0.005 * time;
+		if (currentFrame > 10) currentFrame -= 9;
+		if (fall > 0) {
+			int l = 1;
+			if (last_dir == 'l') l = -1;
+			if (currentFrame < 3) {
+				sprite.setTextureRect(IntRect(35 * int(currentFrame-1) + 40, 860, 35 * l, 40));
+				fall++;
+			}else if(currentFrame < 7) {
+				sprite.setTextureRect(IntRect(43 * int(currentFrame-1) + 30, 860, 43 * l, 40));
+				fall++;
+			}else if (currentFrame < 9) {
+				sprite.setTextureRect(IntRect(45 * int(currentFrame-1) + 30, 860, 45 * l, 40));
+				fall++;
+			}else{
+				sprite.setTextureRect(IntRect(58 * int(currentFrame-1)+ 30, 860, 58 * l, 40));
+				fall++;
+			}
+			if (fall > 11) { fall = 0; }
+		}else {
+			if (dx > 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame), 295, 40, 40)); last_dir = 'r'; };
+			if (dx < 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame) + 40, 295, -40, 40)); last_dir = 'l'; };
+			if (!dx && last_dir == 'r') sprite.setTextureRect(IntRect(45, 25, 30, 40));
+			if (!dx && last_dir == 'l') sprite.setTextureRect(IntRect(45 + 30, 25, -30, 40));
+			if (dy != 0 && last_dir == 'r') sprite.setTextureRect(IntRect(40, 650, 30, 40));
+			if (dy != 0 && last_dir == 'l') sprite.setTextureRect(IntRect(40 + 30, 650, -30, 40));
+		}
 		sprite.setPosition(rect.left - offsetX, rect.top);
 
 		dx = 0;
@@ -105,8 +123,6 @@ public:
 		dx = 0.1;
 		currentFrame = 0;
 	}
-	
-	
 };
 
 class ENEMY {
@@ -130,15 +146,15 @@ public:
 		rect.left += dx * time;
 
 		Collision();
-
-		if (abs(rect.top - p.rect.top) < 64 and abs(rect.left - p.rect.left) < 32 * 14 and abs(rect.left - p.rect.left) > 0) {
+		if (abs(rect.top - p.rect.top) < 64 and abs(rect.left - p.rect.left) < 32 * 6 and abs(rect.left - p.rect.left) > 0) {
 			if (rect.left > p.rect.left) {
 				dx = -0.05;
 			} else {
 				dx = +0.05;
 			}
 		} else {
-			dx = 0;
+			if (dx > 0) { dx = +0.02; }
+			else { dx = -0.02; }
 		}
 
 		currentFrame += time * 0.005;
@@ -149,20 +165,7 @@ public:
 		if (dx > 0) sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame), 155, 55, 50));
 		if (dx < 0) sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame) + 55, 155, -55, 50));
 
-		if (abs(rect.left - p.rect.left) <= 30) {
-			if ( int(currentFrame) == 0 ) sprite.setTextureRect(IntRect(53, 210, -55, 50));
-			if ( int(currentFrame) == 1 ) sprite.setTextureRect(IntRect(105, 210, -55, 50));
-			if ( int(currentFrame) == 2 ) sprite.setTextureRect(IntRect(170, 210, -55, 50));
-			if ( int(currentFrame) == 3 ) sprite.setTextureRect(IntRect(242, 210, -60, 50));
-			if ( int(currentFrame) == 4 ) sprite.setTextureRect(IntRect(318, 210, -90, 50));
-			if ( int(currentFrame) == 5 ) sprite.setTextureRect(IntRect(441, 210, -90, 50));
-			if ( int(currentFrame) == 6 ) sprite.setTextureRect(IntRect(526, 210, -60, 50));
-			if ( int(currentFrame) == 7 ) sprite.setTextureRect(IntRect(579, 210, -55, 50));
-			dx = 0;
-
-		}
-
-		sprite.setPosition(rect.left - offsetX-70, rect.top - offsetY);
+		sprite.setPosition(rect.left - offsetX, rect.top - offsetY);
 	}
 	void Collision() {
 		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
@@ -238,11 +241,9 @@ int main() {
 	float currentFrame = 0;
 
 	PLAYER p(t);
-	ENEMY enemy_1;
-
-	enemy_1.set(enemy1, 200, 440);
+	ENEMY enemy;
+	enemy.set(enemy1, 200, 400);
 	p.set(t, 100, 400);
-
 
 	Clock clock;
 
@@ -289,8 +290,7 @@ int main() {
 		}
 
 		p.update(time);
-		
-		enemy_1.update(time, p);
+		enemy.update(time, p);
 
 		if (p.rect.left > 800 / 3) offsetX = p.rect.left - 800 / 3;
 
@@ -317,7 +317,7 @@ int main() {
 			}
 
 		window.draw(p.sprite);
-		window.draw(enemy_1.sprite);
+		window.draw(enemy.sprite);
 		window.display();
 
 	}
