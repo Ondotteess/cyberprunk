@@ -1,5 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <assert.h>
+
 
 using namespace sf;				
 using namespace std;			
@@ -7,7 +9,7 @@ using namespace std;
 const float speed_x = 0.15;		
 const float speed_y = -0.4;				
 								 
-const int timeset = 1600;		 
+const int timeset = 400;		 
 								
 const int H = 16;				 //		Настройки игрового процесса
 const int W = 80;				 
@@ -19,25 +21,25 @@ float m_buildings_speed = 0.05f;
 float f_buildings_speed = 0.01f; 
 
 
-float offsetX = 0, offsetY = 0;
+float offsetX, offsetY ;
 
 String TileMap[H] = {
 	"                                                                                ",		 
 	"                                                                                ",		 
-	"                                        B                                       ",		 
 	"                                                                                ",		 
-	"                                      B                                         ",		 
+	"                                                                                ",		 
+	"                                                                                ",		 
 	"                                                                                ",		  
-	"                                   B                                            ",		  //		Расположение плиток
+	"                                                                                ",		  //		Расположение плиток
 	"                                                                                ",		 
 	"                                                                                ",		 
-	"                                B                                               ",		 
 	"                                                                                ",		 
-	"                             B                                                  ",		 
 	"                                                                                ",		 
-	"                          B                                                     ",		 
 	"                                                                                ",		 
-	"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",		 
+	"                                                                                ",		 
+	"                                                                                ",		 
+	"                                                                                ",		 
+	"B B B H B B B B B B B B B B H H H B B B B B H B B B B B B B B B B B B B B B B B ",		 
 };
 
 
@@ -67,10 +69,10 @@ public:
 		currentFrame += 0.005 * time;																		//				каждый кадр
 		if (currentFrame > 10) currentFrame -= 8;															
 																											
-		if (dx > 0) sprite.setTextureRect(IntRect(45 * int(currentFrame), 300, 40, 35));					
-		if (dx < 0) sprite.setTextureRect(IntRect(45 * int(currentFrame)+40, 300, -40, 35));				
+		if (dx > 0) sprite.setTextureRect(IntRect(45 * int(currentFrame), 295, 40, 40));					
+		if (dx < 0) sprite.setTextureRect(IntRect(45 * int(currentFrame)+40, 295, -40, 40));				
 																											
-		sprite.setPosition(rect.left - offsetX, rect.top-offsetY);											
+		sprite.setPosition(rect.left - offsetX, rect.top+15);											
 																											
 		dx = 0;
 	}
@@ -78,11 +80,15 @@ public:
 	void Collision(int dir) {																							
 		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)												
 			for (int j = rect.left / 32; j < (rect.left + rect.width) / 32; j++) {										
-				if (TileMap[i][j] == 'B') {																				//   Коллизию делает
+				if (TileMap[i][j] == 'B' || TileMap[i][j] == 'H') {																				//   Коллизию делает
 					if ((dy > 0) && (dir == 1)) { rect.top = i * 32 - rect.height; dy = 0; onGround = true; };			
-					if ((dy < 0) && (dir == 1)) { rect.top = i * 32 + 32; dy = 0; }										
+					if ((dy < 0) && (dir == 1)) { rect.top = i * 32 + 32; dy = 0; }			
+
 					if ((dx > 0) && (dir == 0)) rect.left = j * 32 - rect.width;										
 					if ((dx < 0) && (dir == 0)) rect.left = j * 32 + 32;												
+					
+					assert(i < H);
+					assert(j < W);
 				}
 			}
 	}
@@ -90,7 +96,7 @@ public:
 
 
 int main(){
-	RenderWindow window(VideoMode(800, 600), "Test");
+	RenderWindow window(VideoMode(1080, 720), "Test", Style::Fullscreen);
 	
 	Texture t;
 	t.loadFromFile("zero.png"); 
@@ -115,6 +121,11 @@ int main(){
 		return EXIT_FAILURE;											  
 	}
 
+	Texture tileset;
+	if (!tileset.loadFromFile("tileset.png")) {
+		return EXIT_FAILURE;
+	}
+	
 	Sprite near_buildings(near_buildings_texture);
 	near_buildings.setScale(4.0f, 4.0f);
 	near_buildings.setPosition(0, BD_HEIGHT);
@@ -132,6 +143,8 @@ int main(){
 	backgroundSprite.setScale(window.getSize().x / backgroundSprite.getLocalBounds().width,
 							  window.getSize().y / backgroundSprite.getLocalBounds().height);
 
+	Sprite tile(tileset);
+
 	float currentFrame = 0;
 
 	PLAYER p(t);
@@ -143,10 +156,11 @@ int main(){
 	View view(FloatRect(0, 0, 800, 600));
 	window.setView(view);
 
-	view.setSize(Vector2f(600, 450));
+	view.setSize(Vector2f(600, 440));
 	window.setView(view);
 
 	while (window.isOpen()) {
+
 		float time = clock.getElapsedTime().asMicroseconds();
 		clock.restart();
 		time = time / timeset;
@@ -158,24 +172,31 @@ int main(){
 
 		if (Keyboard::isKeyPressed(Keyboard::Left)) {
 			p.dx = -1 * speed_x;
-			near_buildings.move(n_buildings_speed, 0);					 
-			buildings.move(m_buildings_speed, 0);							//   Сдвиг спрайтов
-			far_buildings.move(f_buildings_speed, 0);						 
+			if (p.rect.left > 800 / 2) {
+				near_buildings.move(n_buildings_speed, 0);
+				buildings.move(m_buildings_speed, 0);							//   Сдвиг спрайтов
+				far_buildings.move(f_buildings_speed, 0);
+			}
 		}																	
 		if (Keyboard::isKeyPressed(Keyboard::Right)) {
 			p.dx = speed_x;
-			near_buildings.move(-n_buildings_speed, 0);
-			buildings.move(-m_buildings_speed, 0);
-			far_buildings.move(-f_buildings_speed, 0);
+			if (p.rect.left > 800 / 2) {
+				near_buildings.move(-n_buildings_speed, 0);
+				buildings.move(-m_buildings_speed, 0);							//   Сдвиг спрайтов
+				far_buildings.move(-f_buildings_speed, 0);
+			}
 		}
 		if (Keyboard::isKeyPressed(Keyboard::Up)) {
 			if (p.onGround) { p.dy = speed_y; p.onGround = false; }
 		}
+		if (Keyboard::isKeyPressed(Keyboard::Escape)) {
+			window.close();
+		}
 
 		p.update(time);
 
-		if ( p.rect.left > 800 / 2 ) offsetX = p.rect.left - 800 / 2;
-		if ( p.rect.top > 600 / 2) offsetY = p.rect.top - 600 / 2;
+		if ( p.rect.left > 800 / 3 ) offsetX = p.rect.left - 800 / 3;
+
 
 		window.clear(Color::White);
 		window.draw(backgroundSprite);				
@@ -186,14 +207,18 @@ int main(){
 		for (int i = 0; i < H; i++)
 			for (int j = 0; j < W; j++)
 			{
-				if (TileMap[i][j] == 'B') rectangle.setFillColor(Color::Black);			 
+				if (TileMap[i][j] == 'B') tile.setTextureRect(IntRect(176, 16, 64, 40));
+
+				if (TileMap[i][j] == 'H') tile.setTextureRect(IntRect(272, 16, 64, 40));
 																						 
 				if (TileMap[i][j] == '0')  rectangle.setFillColor(Color::Green);		 
 																						 //		Отрисовка текстур
 				if (TileMap[i][j] == ' ') continue;										
 																						
+				tile.setPosition(j*32-offsetX, i*32-offsetY);
 				rectangle.setPosition(j * 32 - offsetX, i * 32 - offsetY);				 
 				window.draw(rectangle);
+				window.draw(tile);
 			}
 
 		window.draw(p.sprite);
