@@ -24,21 +24,21 @@ float f_buildings_speed = 0.01f;
 float offsetX, offsetY ;
 
 String TileMap[H] = {
-	"                                                                                ",		 
-	"                                                                                ",		 
-	"                                                                                ",		 
-	"                                                                                ",		 
-	"                                                                                ",		 
-	"                                                                                ",		  
-	"                                                                                ",		  //		Расположение плиток
-	"                                                                                ",		 
-	"                                                                                ",		 
-	"                                                                                ",		 
-	"                                                                                ",		 
-	"                                                                                ",		 
-	"                                                                                ",		 
-	"                                                                                ",		 
-	"                                                                                ",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		  
+	"W                                                                              W",		  //		Расположение плиток
+	"W                                                                              W",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		 
+	"W                                                                              W",		 
 	"B B B H B B B B B B B B B B H H H B B B B B H B B B B B B B B B B B B B B B B B ",		 
 };
 
@@ -58,7 +58,7 @@ public:
 		currentFrame = 0;
 	}
 
-	void update(float time) {																			
+	void update(float time) {
 		rect.left += dx * time;																			
 		Collision(0);																					
 		if (!onGround) dy = dy + 0.0005 * time;															
@@ -80,7 +80,7 @@ public:
 	void Collision(int dir) {																							
 		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)												
 			for (int j = rect.left / 32; j < (rect.left + rect.width) / 32; j++) {										
-				if (TileMap[i][j] == 'B' || TileMap[i][j] == 'H') {																				//   Коллизию делает
+				if (TileMap[i][j] == 'B' || TileMap[i][j] == 'H' || TileMap[i][j] == 'W') {																				//   Коллизию делает
 					if ((dy > 0) && (dir == 1)) { rect.top = i * 32 - rect.height; dy = 0; onGround = true; };			
 					if ((dy < 0) && (dir == 1)) { rect.top = i * 32 + 32; dy = 0; }			
 
@@ -92,6 +92,61 @@ public:
 				}
 			}
 	}
+	void set(Texture& image, int x, int y) {
+		sprite.setTexture(image);
+		rect = FloatRect(x, y, 32, 32);
+
+		dx = 0.1;
+		currentFrame = 0;
+	}
+};
+
+class ENEMY {
+public:
+	float dx, dy;
+	FloatRect rect;
+	Sprite sprite;
+	float currentFrame;
+	bool life;
+
+	void set(Texture& image, int x, int y) {
+		sprite.setTexture(image);
+		rect = FloatRect(x, y, 32, 32);
+
+		dx = 0.1;
+		currentFrame = 0;
+		life = true;
+	}
+
+	void update(float time) {
+		rect.left += dx * time;
+
+		Collision();
+
+		currentFrame += time * 0.005;
+		if (currentFrame > 8) {
+			currentFrame -= 7;
+		}
+
+		if (dx > 0) sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame), 155, 55, 50));
+		if (dx < 0) sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame)+55, 155, -55, 50));
+
+		sprite.setPosition(rect.left - offsetX, rect.top - offsetY+40);
+	}
+	void Collision()
+	{
+		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
+			for (int j = rect.left / 32; j < (rect.left + rect.width) / 32; j++)
+				if ((TileMap[i][j] == 'W') ) {
+					if (dx > 0) {
+						rect.left = j * 32 - rect.width; dx *= -1;
+					} else if (dx < 0) {
+						rect.left = j * 32 + 32;  dx *= -1;
+					}
+
+				}
+
+	}
 };
 
 
@@ -99,33 +154,38 @@ int main(){
 	RenderWindow window(VideoMode(1080, 720), "Test", Style::Fullscreen);
 	
 	Texture t;
-	t.loadFromFile("zero.png"); 
+	t.loadFromFile("./image/zero.png"); 
 
 	Texture backgroundTexture;											  
-	if (!backgroundTexture.loadFromFile("background.png")) {			  
+	if (!backgroundTexture.loadFromFile("./image/background.png")) {			  
 		return EXIT_FAILURE;											  
 	}																	  
 																		  
 	Texture near_buildings_texture;										  
-	if (!near_buildings_texture.loadFromFile("near_buildings.png")) {	  
+	if (!near_buildings_texture.loadFromFile("./image/near_buildings.png")) {	  
 		return EXIT_FAILURE;											  //	Загрузка текстур
 	}																	  
 																		  
 	Texture buildings_texture;											  
-	if (!buildings_texture.loadFromFile("buildings.png")) {				  
+	if (!buildings_texture.loadFromFile("./image/buildings.png")) {				  
 		return EXIT_FAILURE;											  
 	}																	  
 																		  
 	Texture far_buildings_texture;										  
-	if (!far_buildings_texture.loadFromFile("far_buildings.png")) {	
+	if (!far_buildings_texture.loadFromFile("./image/far_buildings.png")) {	
 		return EXIT_FAILURE;											  
 	}
 
 	Texture tileset;
-	if (!tileset.loadFromFile("tileset.png")) {
+	if (!tileset.loadFromFile("./image/tileset.png")) {
 		return EXIT_FAILURE;
 	}
 	
+	Texture enemy1;
+	if (!enemy1.loadFromFile("./image/enemy1.png")) {
+		return EXIT_FAILURE;
+	}
+
 	Sprite near_buildings(near_buildings_texture);
 	near_buildings.setScale(4.0f, 4.0f);
 	near_buildings.setPosition(0, BD_HEIGHT);
@@ -148,6 +208,9 @@ int main(){
 	float currentFrame = 0;
 
 	PLAYER p(t);
+	ENEMY enemy;
+	enemy.set(enemy1, 200, 400);
+	p.set(t, 100, 400);
 
 	Clock clock;
 
@@ -194,6 +257,7 @@ int main(){
 		}
 
 		p.update(time);
+		enemy.update(time);
 
 		if ( p.rect.left > 800 / 3 ) offsetX = p.rect.left - 800 / 3;
 
@@ -209,11 +273,9 @@ int main(){
 			{
 				if (TileMap[i][j] == 'B') tile.setTextureRect(IntRect(176, 16, 64, 40));
 
-				if (TileMap[i][j] == 'H') tile.setTextureRect(IntRect(272, 16, 64, 40));
-																						 
-				if (TileMap[i][j] == '0')  rectangle.setFillColor(Color::Green);		 
+				if (TileMap[i][j] == 'H') tile.setTextureRect(IntRect(272, 16, 64, 40));														 
 																						 //		Отрисовка текстур
-				if (TileMap[i][j] == ' ') continue;										
+				if (TileMap[i][j] == ' ' || TileMap[i][j] == 'W') continue;
 																						
 				tile.setPosition(j*32-offsetX, i*32-offsetY);
 				rectangle.setPosition(j * 32 - offsetX, i * 32 - offsetY);				 
@@ -222,6 +284,7 @@ int main(){
 			}
 
 		window.draw(p.sprite);
+		window.draw(enemy.sprite);
 		window.display();
 	
 	}
