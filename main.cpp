@@ -29,22 +29,23 @@ String TileMap[H] = {
 	"W                                                                              W",
 	"W                                                                              W",
 	"W                                                                              W",
-	"W                      BBBB                                                    W",
-	"W                                     B                                        W",		  //		Расположение плиток
+	"W                      BWBW                                                    W",
+	"W                                     BW                                       W",		  //		Расположение плиток
 	"W                                                                              W",
-	"W                                                   BBB                        W",
+	"W                                                   BWBWB                      W",
 	"W                                                                              W",
-	"W                                       BBBBBBBBB                              W",
-	"W                                   B                                          W",
-	"W                      B                                                       W",
+	"W                                       BWBWBWBWBW                             W",
+	"W                                   BW                                         W",
+	"W                      BW                                                      W",
 	"W                                                                              W",
-	"W                                       B                                      W",
-	"B B B H B B B B B B B B B B H H H B B B B B H B B B B B B B B B B B B B B B B B ",
+	"W                                       BW                                     W",
+	"BWBWBWHWBWBWBWBWBWBWBWBWBWBWHWHWHWBWBWBWBWBWHWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBW",
 };
 
 
 class PLAYER {
 public:
+	char last_dir;
 	float dx, dy;
 	FloatRect rect;
 	bool onGround;
@@ -63,16 +64,20 @@ public:
 		Collision(0);
 		if (!onGround) dy = dy + 0.0005 * time;
 		rect.top += dy * time;
-		onGround = false;
-		Collision(1);
-		//   | Обновляет положение персонада в пространстве
-		currentFrame += 0.005 * time;																		//				каждый кадр
+		onGround = false;																				
+		Collision(1);																					
+																										
+		currentFrame += 0.005 * time;																	
 		if (currentFrame > 10) currentFrame -= 8;
 
-		if (dx > 0) sprite.setTextureRect(IntRect(45 * int(currentFrame), 295, 40, 40));
-		if (dx < 0) sprite.setTextureRect(IntRect(45 * int(currentFrame) + 40, 295, -40, 40));
+		if (dx > 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame), 295, 40, 40)); last_dir = 'r'; };
+		if (dx < 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame) + 40, 295, -40, 40)); last_dir = 'l'; };
+		if (!dx && last_dir == 'r') sprite.setTextureRect(IntRect(45, 25, 30, 40));
+		if (!dx && last_dir == 'l' ) sprite.setTextureRect(IntRect(45+30, 25, -30, 40));
+		if (dy != 0 && last_dir == 'r') sprite.setTextureRect(IntRect(40, 650, 30, 40));
+		if (dy != 0 && last_dir == 'l') sprite.setTextureRect(IntRect(40+30, 650, -30, 40));
 
-		sprite.setPosition(rect.left - offsetX, rect.top + 15);
+		sprite.setPosition(rect.left - offsetX, rect.top);
 
 		dx = 0;
 	}
@@ -125,12 +130,10 @@ public:
 		if (abs(rect.top - p.rect.top) < 64 and abs(rect.left - p.rect.left) < 32 * 6 and abs(rect.left - p.rect.left) > 0) {
 			if (rect.left > p.rect.left) {
 				dx = -0.05;
-			}
-			else {
+			} else {
 				dx = +0.05;
 			}
-		}
-		else {
+		} else {
 			dx = 0;
 		}
 
@@ -142,9 +145,9 @@ public:
 		if (dx > 0) sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame), 155, 55, 50));
 		if (dx < 0) sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame) + 55, 155, -55, 50));
 
-		sprite.setPosition(rect.left - offsetX, rect.top - offsetY + 40);
+		sprite.setPosition(rect.left - offsetX, rect.top - offsetY);
 	}
-	void Collision(){
+	void Collision() {
 		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
 			for (int j = rect.left / 32; j < (rect.left + rect.width) / 32; j++)
 				if ((TileMap[i][j] == 'W')) {
@@ -242,7 +245,6 @@ int main() {
 		while (window.pollEvent(event)) {
 			if (event.type == Event::Closed) window.close();
 		}
-
 		if (Keyboard::isKeyPressed(Keyboard::Left) or Keyboard::isKeyPressed(Keyboard::A)) {
 			p.dx = -1 * speed_x;
 			if (p.rect.left > 800 / 2) {
@@ -262,6 +264,7 @@ int main() {
 		if (Keyboard::isKeyPressed(Keyboard::Up) or Keyboard::isKeyPressed(Keyboard::W)) {
 			if (p.onGround) { p.dy = speed_y; p.onGround = false; }
 		}
+
 		if (Keyboard::isKeyPressed(Keyboard::Escape)) {
 			window.close();
 		}
