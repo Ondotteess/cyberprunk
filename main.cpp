@@ -15,34 +15,35 @@ float speed_y = -0.4;
 int timeset = 400;
 
 const int H = 16;				 //		Настройки игрового процесса
-const int W = 100;
+const int W = 121;
 
 const int BD_HEIGHT = 150;
 
-float n_buildings_speed = 0.1f;
-float m_buildings_speed = 0.05f;
-float f_buildings_speed = 0.01f;
+float n_buildings_speed = 0.1;
+float m_buildings_speed = 0.05;
+float f_buildings_speed = 0.01;
 
+int keys = 0;
 
 float offsetX, offsetY;
 
 String TileMap[H] = {
-	"WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
-	"W                              R                1                                                  W",
-	"W                              R                1                                                  W",
-	"W                              R                1                                                  W",
-	"W                              R                1                                                  W",
-	"W                              R                1                                                  W",
-	"W                              R                1                                                  W",		  //		Расположение плиток
-	"W            R0   2222222222   R  4             1                                                  W",
-	"W            R5        1   R   R22222222222222222                                                  W",
-	"W            R         1   R   0  0             R                                                  W",
-	"W            R 4       1   R                    R                                                  W",
-	"W            R2222222221   R   R222222222       R2222222                                           W",
-	"W            1       3 1   R   R        1       1                                                  W",
-	"W            1         1   R   R        1       1                                                  W",
-	"W            1         1   R   R  4     1       1                                                  W",
-	"BWBWBWHWBWBWBWBWBWBWBWBWBWBWHWHWHWBWBWBWBWBWHWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBW",
+	"WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWR",
+	"W                              R                1                                       2222222                        WR",
+	"W                              R                1                                      R2222222                        WR",
+	"W                              R                1                                      R2222222                        WR",
+	"W                              R                1                                      R2222222                        WR",
+	"W                              R                1                                      R2222222                        WR",
+	"W                              R                1                                      R2222222     RRRRRRRRRRRRRRRRRRRRR",		  //		Расположение плиток
+	"W            R0   2222222222   R  4             1                                      R2222222     R0     0R          RR",
+	"W            R5        1   R   R22222222222222222                            RR0       R2222222     R       R      6   RR",
+	"W            R         1   R   0  0             R                           RR0       RR2222222     R  2R   R      7   RR",
+	"W            R 4       1   R                    R                          RR0       RR22222222     R0  R   R      7   RR",
+	"W            R2222222221   R   R222222222       R22                       RR0       RR222222222     R   R0  R    122222RR",
+	"W            1       3 1   R   R        1       1                        RR0       RR2222222222     R2  R   R    1     RR",
+	"W            1         1   R   R        1       1                       RR0        1          1         R        1     RR",
+	"W            1         1   R   R  4     1       1                      RR0         1     4    1         R        1  4  RR",
+	"BWBWBWHWBWBWBWBWBWBWBWBWBWBWHWHWHWBWBWBWBWBWHWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBBWBWBWBWBWBWBWBWBR",
 };
 
 
@@ -62,10 +63,28 @@ public:
 		currentFrame = 0;
 		fall = 0;
 	}
+	void Collision(int dir) {
+		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
+			for (int j = rect.left / 32; j < (rect.left + rect.width) / 32; j++) {
+				if (TileMap[i][j] == 'B' || TileMap[i][j] == 'H' || TileMap[i][j] == 'W' || \
+					TileMap[i][j] == '2' || TileMap[i][j] == 'R') {							//   Коллизию делает
+					if ((dy > 0) && (dir == 1)) { rect.top = i * 32 - rect.height; dy = 0; onGround = true; };
+					if ((dy < 0) && (dir == 1)) { rect.top = i * 32 + 32; dy = 0; }
+
+					if ((dx > 0) && (dir == 0)) rect.left = j * 32 - rect.width;
+					if ((dx < 0) && (dir == 0)) rect.left = j * 32 + 32;
+
+					assert(i < H);
+					assert(j < W);
+				}
+
+				if (TileMap[i][j] == '4') { TileMap[i][j] = ' '; keys += 1; }
+				if (TileMap[i][j] == '7' && keys == 5) exit(1);
+			}
+	}
 
 	void update(float time) {
 		rect.left += dx * time;
-		printf("%f\t%f\n", sprite.getPosition().x, sprite.getPosition().y);
 		Collision(0);
 		if (!onGround) dy = dy + 0.0005 * time;
 		rect.top += dy * time;
@@ -85,43 +104,25 @@ public:
 		if (!alive) {
 			fall += 0.004 * time;
 
-			if (int(fall) == 0) { sprite.setTextureRect(IntRect(40, 870, 35, 40)); rect.left -= speed_x * time; rect.top += (speed_y * time) / 2; }
-			if (int(fall) == 1) { sprite.setTextureRect(IntRect(75, 865, 35, 40)); rect.left -= speed_x * time; rect.top += (speed_y * time) / 2; }
-			if (int(fall) == 2) { sprite.setTextureRect(IntRect(112, 865, 45, 35)); rect.left -= speed_x * time; rect.top += (speed_y * time) / 2; }
+			if (int(fall) == 0) { sprite.setTextureRect(IntRect(40, 870, 35, 40)); rect.left -= speed_x * time; rect.top += (speed_y * 0.01) / 2; }
+			if (int(fall) == 1) { sprite.setTextureRect(IntRect(75, 865, 35, 40)); rect.left -= speed_x * time; rect.top += (speed_y * 0.01) / 2; }
+			if (int(fall) == 2) { sprite.setTextureRect(IntRect(112, 865, 45, 35)); rect.left -= speed_x * time; rect.top += (speed_y * 0.01) / 2; }
 			if (int(fall) == 3)  sprite.setTextureRect(IntRect(158, 870, 40, 35));
 			if (int(fall) == 4) sprite.setTextureRect(IntRect(202, 870, 40, 40));
 			if (int(fall) == 5) sprite.setTextureRect(IntRect(245, 870, 45, 40));
-			if (int(fall) == 6) sprite.setTextureRect(IntRect(295, 870, 45, 40));
-			if (int(fall) == 7) sprite.setTextureRect(IntRect(350, 870, 45, 40));
-			if (int(fall) == 8) sprite.setTextureRect(IntRect(420, 870, 45, 40));
-			if (int(fall) == 9) sprite.setTextureRect(IntRect(485, 870, 45, 40));
+			if (int(fall) == 6)  sprite.setTextureRect(IntRect(295, 870, 45, 40));
+			if (int(fall) == 7)  sprite.setTextureRect(IntRect(350, 870, 45, 40));
+			if (int(fall) == 8)  sprite.setTextureRect(IntRect(420, 870, 45, 40));
+			if (int(fall) == 9)  sprite.setTextureRect(IntRect(485, 870, 45, 40));
 			if (int(fall) == 10) sprite.setTextureRect(IntRect(550, 870, 45, 40));
 			if (int(fall) == 11) sprite.setTextureRect(IntRect(615, 870, 45, 40));
-			if (fall > 11) { alive = true; fall = 0; }
+			if (fall > 11) { alive = true; fall = 0; dx = 0; }
 		}
 		sprite.setPosition(rect.left - offsetX, rect.top);
 
 		dx = 0;
 	}
 
-	void Collision(int dir) {
-		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
-			for (int j = rect.left / 32; j < (rect.left + rect.width) / 32; j++) {
-				if (TileMap[i][j] == 'B' || TileMap[i][j] == 'H' || TileMap[i][j] == 'W' || \
-					TileMap[i][j] == '2' || TileMap[i][j] == 'R') {																				//   Коллизию делает
-					if ((dy > 0) && (dir == 1)) { rect.top = i * 32 - rect.height; dy = 0; onGround = true; };
-					if ((dy < 0) && (dir == 1)) { rect.top = i * 32 + 32; dy = 0; }
-
-					if ((dx > 0) && (dir == 0)) rect.left = j * 32 - rect.width;
-					if ((dx < 0) && (dir == 0)) rect.left = j * 32 + 32;
-
-					assert(i < H);
-					assert(j < W);
-				}
-
-				if (TileMap[i][j] == '4') TileMap[i][j] = ' ';
-			}
-	}
 	void set(Texture& image, int x, int y) {
 		sprite.setTexture(image);
 		rect = FloatRect(x, y, 32, 32);
@@ -172,7 +173,7 @@ public:
 		if (dx < 0) { sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame) + 55, 155, -55, 50)); last_dir = 'l'; }
 
 
-		if (abs(rect.left - p.rect.left) <= 70 && abs(rect.top - p.rect.top) < 20) {
+		if (abs(rect.left - p.rect.left) <= 70 && abs(rect.top - p.rect.top) < 20 && life) {
 			isBeating = true;
 			if (dx > 0) { sprite.setScale(1, 1); }
 			else if (dx < 0 && isBeating) { sprite.setScale(-1, 1); };
@@ -195,6 +196,8 @@ public:
 		if (isBeating && last_dir == 'l') sprite.setPosition(rect.left - offsetX + 35, rect.top - offsetY);
 		else sprite.setPosition(rect.left - offsetX, rect.top - offsetY);
 
+		if (!life) { sprite.setTextureRect(IntRect(585, 255, 45, 65)); dx = 0; isBeating = false;  }
+
 	}
 	void Collision() {
 		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
@@ -210,7 +213,8 @@ public:
 
 
 int main() {
-	RenderWindow window(VideoMode(1080, 720), "Test");
+	start:
+	RenderWindow window(VideoMode(1080, 720), "Test", Style::Fullscreen);
 
 	Texture t;
 	t.loadFromFile("./image/zero.png");
@@ -277,11 +281,20 @@ int main() {
 	ENEMY enemy_2;
 	ENEMY enemy_3;
 	ENEMY enemy_4;
+	ENEMY enemy_5;
+	ENEMY enemy_6;
+	ENEMY enemy_7;
+	ENEMY enemy_8;
 
 	enemy_1.set(enemy1, 500, 300);
 	enemy_2.set(enemy1, 500, 440);
 	enemy_3.set(enemy1, 1030, 210);
 	enemy_4.set(enemy1, 1300, 210);
+	enemy_5.set(enemy1, 1030, 440);
+	enemy_5.set(enemy1, 73 * 32+50, 440);
+	enemy_6.set(enemy1, 88 * 32+50, 440);
+	enemy_7.set(enemy1, 34 * 32 + 50, 440);
+	enemy_7.set(enemy1, 108 * 32 + 50, 440);
 	p.set(t, 100, 400);
 
 
@@ -304,7 +317,7 @@ int main() {
 		while (window.pollEvent(event)) {
 			if (event.type == Event::Closed) window.close();
 		}
-		if (Keyboard::isKeyPressed(Keyboard::Left) or Keyboard::isKeyPressed(Keyboard::A)) {
+		if ((Keyboard::isKeyPressed(Keyboard::Left) && (alive)) or (Keyboard::isKeyPressed(Keyboard::A)) && (alive)) {
 			p.dx = -1 * speed_x;
 			if (p.rect.left > 800 / 2) {
 				near_buildings.move(n_buildings_speed, 0);
@@ -312,7 +325,7 @@ int main() {
 				far_buildings.move(f_buildings_speed, 0);
 			}
 		}
-		if (Keyboard::isKeyPressed(Keyboard::Right) or Keyboard::isKeyPressed(Keyboard::D)) {
+		if ((Keyboard::isKeyPressed(Keyboard::Right) && (alive)) or (Keyboard::isKeyPressed(Keyboard::D) && (alive))) {
 			p.dx = speed_x;
 			if (p.rect.left > 800 / 2) {
 				near_buildings.move(-n_buildings_speed, 0);
@@ -320,28 +333,50 @@ int main() {
 				far_buildings.move(-f_buildings_speed, 0);
 			}
 		}
-		if (Keyboard::isKeyPressed(Keyboard::Up) or Keyboard::isKeyPressed(Keyboard::W)) {
+		if ((Keyboard::isKeyPressed(Keyboard::Up) && alive) or (Keyboard::isKeyPressed(Keyboard::W)) && alive) {
 			if (p.onGround) { p.dy = speed_y; p.onGround = false; }
 		}
 
-
-		if (Mouse::isButtonPressed(Mouse::Left)) {
-			if (Mouse::getPosition().x < p.sprite.getPosition().x) p.beating(-1, time);
-			else p.beating(1, time);
-		}
 		if (Keyboard::isKeyPressed(Keyboard::Escape)) {
 			window.close();
 		}
 
+		if (p.rect.intersects(enemy_1.rect)) {
+			if (p.dy > 0) { enemy_1.dx = 0; p.dy = -0.2; enemy_1.life = false; }
+		}
+		if (p.rect.intersects(enemy_2.rect)) {
+			if (p.dy > 0) { enemy_2.dx = 0; p.dy = -0.2; enemy_2.life = false; }
+		}
+		if (p.rect.intersects(enemy_3.rect)) {
+			if (p.dy > 0) { enemy_3.dx = 0; p.dy = -0.2; enemy_3.life = false; }
+		}
+		if (p.rect.intersects(enemy_4.rect)) {
+			if (p.dy > 0) { enemy_4.dx = 0; p.dy = -0.2; enemy_4.life = false; }
+		}
+		if (p.rect.intersects(enemy_5.rect)) {
+			if (p.dy > 0) { enemy_5.dx = 0; p.dy = -0.2; enemy_5.life = false; }
+		}
+		if (p.rect.intersects(enemy_6.rect)) {
+			if (p.dy > 0) { enemy_6.dx = 0; p.dy = -0.2; enemy_6.life = false; }
+		}
+		if (p.rect.intersects(enemy_7.rect)) {
+			if (p.dy > 0) { enemy_7.dx = 0; p.dy = -0.2; enemy_7.life = false; }
+		}
+		if (p.rect.intersects(enemy_8.rect)) {
+			if (p.dy > 0) { enemy_8.dx = 0; p.dy = -0.2; enemy_8.life = false; }
+		}
 		p.update(time);
 
 		enemy_1.update(time, p);
 		enemy_2.update(time, p);
 		enemy_3.update(time, p);
 		enemy_4.update(time, p);
+		enemy_5.update(time, p);
+		enemy_6.update(time, p);
+		enemy_7.update(time, p);
+		enemy_8.update(time, p);
 
 		if (p.rect.left > 800 / 2) offsetX = p.rect.left - 800 / 2;
-
 
 		window.clear(Color::White);
 		window.draw(backgroundSprite);
@@ -356,6 +391,7 @@ int main() {
 				if (TileMap[i][j] == '2') { tile1.setTextureRect(IntRect(335, 15, 32, 32)); tile1.setScale(2, 2); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 				if (TileMap[i][j] == '3') { tile1.setTextureRect(IntRect(224, 176, 47, 117)); tile1.setScale(1.4, 1.5); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 				if (TileMap[i][j] == '4') {
+
 					tile1.setTextureRect(IntRect(105, 175, 45, 15));
 					tile1.setScale(1, 1);
 					tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY + 20);
@@ -365,9 +401,11 @@ int main() {
 					tile1.setScale(1, 1);
 					tile1.setPosition(j * 32 - offsetX + 17, i * 32 - offsetY - 15);
 					window.draw(tile1);
+
 				}
 				if (TileMap[i][j] == '5') { tile1.setTextureRect(IntRect(160, 96, 46, 30)); tile1.setScale(3, 3.3); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 
+				if (TileMap[i][j] == '6') { tile1.setTextureRect(IntRect(47, 16, 50, 75)); tile1.setScale(2, 2); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 
 				if (TileMap[i][j] == 'R') { tile1.setTextureRect(IntRect(15, 15, 18, 33)); tile1.setScale(2, 1); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 
@@ -384,8 +422,13 @@ int main() {
 		window.draw(enemy_2.sprite);
 		window.draw(enemy_3.sprite);
 		window.draw(enemy_4.sprite);
+		window.draw(enemy_5.sprite);
+		window.draw(enemy_6.sprite);
+		window.draw(enemy_7.sprite);
+		window.draw(enemy_8.sprite);
 		window.display();
 
 	}
 	return 0;
+	
 }
