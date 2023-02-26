@@ -2,14 +2,17 @@
 #include <iostream>
 #include <assert.h>
 
+float fall = 0;
+
+bool alive = true;
 
 using namespace sf;
 using namespace std;
 
-const float speed_x = 0.15;
-const float speed_y = -0.4;
+float speed_x = 0.15;
+float speed_y = -0.4;
 
-const int timeset = 400;
+int timeset = 400;
 
 const int H = 16;				 //		Настройки игрового процесса
 const int W = 80;
@@ -24,21 +27,21 @@ float f_buildings_speed = 0.01f;
 float offsetX, offsetY;
 
 String TileMap[H] = {
+	"WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
 	"W                                                                              W",
 	"W                                                                              W",
 	"W                                                                              W",
 	"W                                                                              W",
 	"W                                                                              W",
-	"W                      BWBW                                                    W",
-	"W                                     BW                                       W",		  //		Расположение плиток
-	"W                                                                              W",
-	"W                                                   BWBWB                      W",
-	"W                                                                              W",
-	"W                                       BWBWBWBWBW                             W",
-	"W                                   BW                                         W",
-	"W                      BW                                                      W",
+	"W                                                                              W",		  //		Расположение плиток
 	"W                                                                              W",
 	"W                                                                              W",
+	"W                                                                              W",
+	"W              4                                                               W",
+	"W            22222222221                                                       W",
+	"W                    3 1                                                       W",
+	"W                      1                                                       W",
+	"W                      1                                                       W",
 	"BWBWBWHWBWBWBWBWBWBWBWBWBWBWHWHWHWBWBWBWBWBWHWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBW",
 };
 
@@ -57,6 +60,7 @@ public:
 		rect = FloatRect(50, 250, 40, 45);
 		dx = dy = 0;
 		currentFrame = 0;
+		fall = 0;
 	}
 
 	void update(float time) {
@@ -66,18 +70,34 @@ public:
 		rect.top += dy * time;
 		onGround = false;
 		Collision(1);
+		if (alive) {
+			currentFrame += 0.005 * time;
+			if (currentFrame > 10) currentFrame -= 8;
 
-		currentFrame += 0.005 * time;
-		if (currentFrame > 10) currentFrame -= 8;
-
-		if (dx > 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame), 295, 40, 40)); last_dir = 'r'; };
-		if (dx < 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame) + 40, 295, -40, 40)); last_dir = 'l'; };
-		if (!dx && last_dir == 'r') sprite.setTextureRect(IntRect(45, 25, 30, 40));
-		if (!dx && last_dir == 'l') sprite.setTextureRect(IntRect(45 + 30, 25, -30, 40));
-		if (dy != 0 && last_dir == 'r') sprite.setTextureRect(IntRect(40, 650, 30, 40));
-		if (dy != 0 && last_dir == 'l') sprite.setTextureRect(IntRect(40 + 30, 650, -30, 40));
-
-
+			if (dx > 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame), 295, 40, 40)); last_dir = 'r'; };
+			if (dx < 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame) + 40, 295, -40, 40)); last_dir = 'l'; };
+			if (!dx && last_dir == 'r') sprite.setTextureRect(IntRect(45, 25, 30, 40));
+			if (!dx && last_dir == 'l') sprite.setTextureRect(IntRect(45 + 30, 25, -30, 40));
+			if (dy != 0 && last_dir == 'r') sprite.setTextureRect(IntRect(40, 650, 30, 40));
+			if (dy != 0 && last_dir == 'l') sprite.setTextureRect(IntRect(40 + 30, 650, -30, 40));
+		}
+		if (!alive) {
+			fall += 0.004 * time;
+		
+			if (int(fall) == 0) { sprite.setTextureRect(IntRect(40, 870, 35, 40)); rect.left -= speed_x * time; rect.top += (speed_y * time) / 2; }
+			if (int(fall) == 1) { sprite.setTextureRect(IntRect(75, 865, 35, 40)); rect.left -= speed_x * time; rect.top += (speed_y * time) / 2; }
+			if (int(fall) == 2) { sprite.setTextureRect(IntRect(112, 865, 45, 35)); rect.left -= speed_x * time; rect.top += (speed_y * time) / 2; }
+			if (int(fall) == 3)  sprite.setTextureRect(IntRect(158, 870, 40, 35));
+			if (int(fall) == 4) sprite.setTextureRect(IntRect(202, 870, 40, 40));
+			if (int(fall) == 5) sprite.setTextureRect(IntRect(245, 870, 45, 40));
+			if (int(fall) == 6) sprite.setTextureRect(IntRect(295, 870, 45, 40));
+			if (int(fall) == 7) sprite.setTextureRect(IntRect(350, 870, 45, 40));
+			if (int(fall) == 8) sprite.setTextureRect(IntRect(420, 870, 45, 40));
+			if (int(fall) == 9) sprite.setTextureRect(IntRect(485, 870, 45, 40));
+			if (int(fall) == 10) sprite.setTextureRect(IntRect(550, 870, 45, 40));
+			if (int(fall) == 11) sprite.setTextureRect(IntRect(615, 870, 45, 40));
+			if (fall > 11) { alive = true; fall = 0; }
+		}
 		sprite.setPosition(rect.left - offsetX, rect.top);
 
 		dx = 0;
@@ -86,7 +106,8 @@ public:
 	void Collision(int dir) {
 		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
 			for (int j = rect.left / 32; j < (rect.left + rect.width) / 32; j++) {
-				if (TileMap[i][j] == 'B' || TileMap[i][j] == 'H' || TileMap[i][j] == 'W') {																				//   Коллизию делает
+				if (TileMap[i][j] == 'B' || TileMap[i][j] == 'H' || TileMap[i][j] == 'W' ||\
+					TileMap[i][j] == '2') {																				//   Коллизию делает
 					if ((dy > 0) && (dir == 1)) { rect.top = i * 32 - rect.height; dy = 0; onGround = true; };
 					if ((dy < 0) && (dir == 1)) { rect.top = i * 32 + 32; dy = 0; }
 
@@ -104,8 +125,9 @@ public:
 
 		dx = 0.1;
 		currentFrame = 0;
+		alive = true;
 	}
-
+	
 
 };
 
@@ -115,7 +137,7 @@ public:
 	FloatRect rect;
 	Sprite sprite;
 	float currentFrame;
-	bool life;
+	bool life, isBeating;
 
 	void set(Texture& image, int x, int y) {
 		sprite.setTexture(image);
@@ -127,57 +149,46 @@ public:
 	}
 
 	void update(float time, PLAYER p) {
+		char last_dir = 'r';
+		sprite.setScale(1, 1);
 		rect.left += dx * time;
 
 		Collision();
 
-		if (abs(rect.top - p.rect.top) < 64 and abs(rect.left - p.rect.left) < 32 * 14 and abs(rect.left - p.rect.left) > 0) {
-			if (rect.left > p.rect.left) {
-				dx = -0.05;
+		if ((abs(rect.top - p.rect.top) < 200) && (abs(rect.left - p.rect.left) < 32 * 14) && (abs(rect.left - p.rect.left) > 0)) {
+			if (rect.left > p.rect.left) dx = -0.05;
+			else dx = +0.05;
+		} else dx = 0;
+
+		currentFrame += time * 0.008;
+		if (currentFrame > 8) currentFrame -= 7;
+
+		if (dx > 0) { sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame), 155, 55, 50)); last_dir = 'r'; }
+		if (dx < 0) { sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame) + 55, 155, -55, 50)); last_dir = 'l'; }
+
+
+		if (abs(rect.left - p.rect.left) <= 70 && abs(rect.top - p.rect.top) < 20) {
+			isBeating = true;
+			if (dx > 0) { sprite.setScale(1, 1); }
+			else if (dx < 0 && isBeating) { sprite.setScale(-1, 1); };
+			if (int(currentFrame) == 0) sprite.setTextureRect(IntRect(53, 210, -55, 50));
+			if (int(currentFrame) == 1) sprite.setTextureRect(IntRect(105, 210, -50, 50));
+			if (int(currentFrame) == 2) sprite.setTextureRect(IntRect(170, 210, -50, 50));
+			if (int(currentFrame) == 3) sprite.setTextureRect(IntRect(242, 210, -60, 50));
+			if (int(currentFrame) == 4) sprite.setTextureRect(IntRect(318, 210, -75, 50));
+			if (int(currentFrame) == 5) sprite.setTextureRect(IntRect(441, 210, -80, 50));
+			if (int(currentFrame) == 6) sprite.setTextureRect(IntRect(526, 210, -50, 50));
+			if (int(currentFrame) == 7) {
+				sprite.setTextureRect(IntRect(579, 210, -50, 50));
+				if (abs(rect.top - p.rect.top) <= 20) { alive = false; p.update(time); };
+
 			}
-			else {
-				dx = +0.05;
-			}
-		}
-		else {
 			dx = 0;
-		}
+		} else isBeating = false;
+		
+		if (isBeating && last_dir == 'l') sprite.setPosition(rect.left - offsetX + 35, rect.top - offsetY);
+		else sprite.setPosition(rect.left - offsetX, rect.top - offsetY);
 
-		currentFrame += time * 0.005;
-		if (currentFrame > 8) {
-			currentFrame -= 7;
-		}
-
-		if (dx > 0) sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame), 155, 55, 50));
-		if (dx < 0) sprite.setTextureRect(IntRect(10 + 55 * int(currentFrame) + 55, 155, -55, 50));
-
-		if (abs(rect.left - p.rect.left) <= 70) {
-			if (rect.left < p.rect.left) {
-				if (int(currentFrame) == 0) sprite.setTextureRect(IntRect(53, 210, -55, 50));
-				if (int(currentFrame) == 1) sprite.setTextureRect(IntRect(105, 210, -50, 50));
-				if (int(currentFrame) == 2) sprite.setTextureRect(IntRect(170, 210, -50, 50));
-				if (int(currentFrame) == 3) sprite.setTextureRect(IntRect(242, 210, -60, 50));
-				if (int(currentFrame) == 4) sprite.setTextureRect(IntRect(318, 210, -75, 50));
-				if (int(currentFrame) == 5) sprite.setTextureRect(IntRect(441, 210, -80, 50));
-				if (int(currentFrame) == 6) sprite.setTextureRect(IntRect(526, 210, -50, 50));
-				if (int(currentFrame) == 7) sprite.setTextureRect(IntRect(579, 210, -50, 50));
-				dx = 0;
-			}
-			else {
-				if (int(currentFrame) == 0) sprite.setTextureRect(IntRect(10, 210, -55, 50));
-				if (int(currentFrame) == 1) sprite.setTextureRect(IntRect(60, 210, -50, 50));
-				if (int(currentFrame) == 2) sprite.setTextureRect(IntRect(115, 210, -50, 50));
-				if (int(currentFrame) == 3) sprite.setTextureRect(IntRect(180, 210, -60, 50));
-				if (int(currentFrame) == 4) sprite.setTextureRect(IntRect(250, 210, -75, 50));
-				if (int(currentFrame) == 5) sprite.setTextureRect(IntRect(329, 210, -80, 50));
-				if (int(currentFrame) == 6) sprite.setTextureRect(IntRect(448, 210, -50, 50));
-				if (int(currentFrame) == 7) sprite.setTextureRect(IntRect(536, 210, -50, 50));
-				sprite.setScale(-1.f, 1.f);
-				dx = 0;
-			}
-		}
-
-		sprite.setPosition(rect.left - offsetX, rect.top - offsetY);
 	}
 	void Collision() {
 		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
@@ -196,7 +207,7 @@ public:
 
 
 int main() {
-	RenderWindow window(VideoMode(1080, 720), "Test", Style::Fullscreen);
+	RenderWindow window(VideoMode(1080, 720), "Test");
 
 	Texture t;
 	t.loadFromFile("./image/zero.png");
@@ -226,6 +237,11 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
+	Texture tileset1;
+	if (!tileset1.loadFromFile("./image/tileset1.png")) {
+		return EXIT_FAILURE;
+	}
+
 	Texture enemy1;
 	if (!enemy1.loadFromFile("./image/enemy1.png")) {
 		return EXIT_FAILURE;
@@ -249,13 +265,14 @@ int main() {
 		window.getSize().y / backgroundSprite.getLocalBounds().height);
 
 	Sprite tile(tileset);
+	Sprite tile1(tileset1);
 
 	float currentFrame = 0;
 
 	PLAYER p(t);
 	ENEMY enemy_1;
 
-	enemy_1.set(enemy1, 200, 440);
+	enemy_1.set(enemy1, 400, 440);
 	p.set(t, 100, 400);
 
 
@@ -270,7 +287,6 @@ int main() {
 	window.setView(view);
 
 	while (window.isOpen()) {
-
 		float time = clock.getElapsedTime().asMicroseconds();
 		clock.restart();
 		time = time / timeset;
@@ -307,7 +323,7 @@ int main() {
 
 		enemy_1.update(time, p);
 
-		if (p.rect.left > 800 / 3) offsetX = p.rect.left - 800 / 3;
+		if (p.rect.left > 800 / 2) offsetX = p.rect.left - 800 / 2;
 
 
 		window.clear(Color::White);
@@ -317,18 +333,29 @@ int main() {
 		window.draw(near_buildings);
 
 		for (int i = 0; i < H; i++)
-			for (int j = 0; j < W; j++)
-			{
-				if (TileMap[i][j] == 'B') tile.setTextureRect(IntRect(176, 16, 64, 40));
+			for (int j = 0; j < W; j++) {
 
-				if (TileMap[i][j] == 'H') tile.setTextureRect(IntRect(272, 16, 64, 40));
-				//		Отрисовка текстур
+				if (TileMap[i][j] == '1') { tile1.setTextureRect(IntRect(144, 21, 32, 64)); tile1.setScale(1, 1); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
+				if (TileMap[i][j] == '2') { tile1.setTextureRect(IntRect(335, 15, 32, 32)); tile1.setScale(2, 2); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
+				if (TileMap[i][j] == '3') { tile1.setTextureRect(IntRect(224, 176, 47, 117)); tile1.setScale(1.4, 1.5); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
+				if (TileMap[i][j] == '4') {
+					tile1.setTextureRect(IntRect(105, 175, 45, 15)); 
+					tile1.setScale(1, 1); 
+					tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY+20); 
+					window.draw(tile1);
+
+					tile1.setTextureRect(IntRect(323, 96, 22, 88));
+					tile1.setScale(1, 1);
+					tile1.setPosition(j * 32 - offsetX + 18, i * 32 - offsetY+time * 0.4);
+					window.draw(tile1);
+				}
+
+				if (TileMap[i][j] == 'B') { tile.setTextureRect(IntRect(176, 16, 64, 40)); tile.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile); }
+
+				if (TileMap[i][j] == 'H') { tile.setTextureRect(IntRect(272, 16, 64, 40)); tile.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile);}
+
 				if (TileMap[i][j] == ' ' || TileMap[i][j] == 'W') continue;
-
-				tile.setPosition(j * 32 - offsetX, i * 32 - offsetY);
-				rectangle.setPosition(j * 32 - offsetX, i * 32 - offsetY);
-				window.draw(rectangle);
-				window.draw(tile);
+	
 			}
 
 		window.draw(p.sprite);
