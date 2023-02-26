@@ -34,14 +34,14 @@ String TileMap[H] = {
 	"W                                                                              W",
 	"W                                                                              W",
 	"W                                                                              W",		  //		Расположение плиток
-	"W                                                                              W",
-	"W                                                                              W",
-	"W                                                                              W",
-	"W              4                                                               W",
-	"W            22222222221                                                       W",
-	"W                    3 1                                                       W",
-	"W                      1                                                       W",
-	"W                      1                                                       W",
+	"W            10   2222222222                                                   W",
+	"W            15        1   R                                                   W",
+	"W            1         1   R                                                   W",
+	"W            1 4       1   R      R222222222                                   W",
+	"W            12222222221   R      R5       1                                   W",
+	"W            1       3 1   R      R        1                                   W",
+	"W            1         1   R      R        1                                   W",
+	"W            1         1   R      R        1                                   W",
 	"BWBWBWHWBWBWBWBWBWBWBWBWBWBWHWHWHWBWBWBWBWBWHWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBW",
 };
 
@@ -83,7 +83,7 @@ public:
 		}
 		if (!alive) {
 			fall += 0.004 * time;
-		
+
 			if (int(fall) == 0) { sprite.setTextureRect(IntRect(40, 870, 35, 40)); rect.left -= speed_x * time; rect.top += (speed_y * time) / 2; }
 			if (int(fall) == 1) { sprite.setTextureRect(IntRect(75, 865, 35, 40)); rect.left -= speed_x * time; rect.top += (speed_y * time) / 2; }
 			if (int(fall) == 2) { sprite.setTextureRect(IntRect(112, 865, 45, 35)); rect.left -= speed_x * time; rect.top += (speed_y * time) / 2; }
@@ -106,8 +106,8 @@ public:
 	void Collision(int dir) {
 		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
 			for (int j = rect.left / 32; j < (rect.left + rect.width) / 32; j++) {
-				if (TileMap[i][j] == 'B' || TileMap[i][j] == 'H' || TileMap[i][j] == 'W' ||\
-					TileMap[i][j] == '2') {																				//   Коллизию делает
+				if (TileMap[i][j] == 'B' || TileMap[i][j] == 'H' || TileMap[i][j] == 'W' || \
+					TileMap[i][j] == '2' || TileMap[i][j] == 'R') {																				//   Коллизию делает
 					if ((dy > 0) && (dir == 1)) { rect.top = i * 32 - rect.height; dy = 0; onGround = true; };
 					if ((dy < 0) && (dir == 1)) { rect.top = i * 32 + 32; dy = 0; }
 
@@ -117,6 +117,8 @@ public:
 					assert(i < H);
 					assert(j < W);
 				}
+
+				if (TileMap[i][j] == '4') TileMap[i][j] = ' ';
 			}
 	}
 	void set(Texture& image, int x, int y) {
@@ -127,7 +129,7 @@ public:
 		currentFrame = 0;
 		alive = true;
 	}
-	
+
 
 };
 
@@ -155,10 +157,10 @@ public:
 
 		Collision();
 
-		if ((abs(rect.top - p.rect.top) < 200) && (abs(rect.left - p.rect.left) < 32 * 14) && (abs(rect.left - p.rect.left) > 0)) {
+		if ((abs(rect.top - p.rect.top) < 20) && (abs(rect.left - p.rect.left) < 32 * 10)) {
 			if (rect.left > p.rect.left) dx = -0.05;
-			else dx = +0.05;
-		} else dx = 0;
+			else dx = 0.05;
+		} 
 
 		currentFrame += time * 0.008;
 		if (currentFrame > 8) currentFrame -= 7;
@@ -184,24 +186,22 @@ public:
 
 			}
 			dx = 0;
-		} else isBeating = false;
-		
+		}
+		else isBeating = false;
+
 		if (isBeating && last_dir == 'l') sprite.setPosition(rect.left - offsetX + 35, rect.top - offsetY);
 		else sprite.setPosition(rect.left - offsetX, rect.top - offsetY);
 
 	}
 	void Collision() {
 		for (int i = rect.top / 32; i < (rect.top + rect.height) / 32; i++)
-			for (int j = rect.left / 32; j < (rect.left + rect.width) / 32; j++)
-				if ((TileMap[i][j] == 'W')) {
-					if (dx > 0) {
-						rect.left = j * 32 - rect.width; dx *= -1;
-					}
-					else if (dx < 0) {
-						rect.left = j * 32 + 32;  dx *= -1;
-					}
-
+			for (int j = rect.left / 32; j < (rect.left + rect.width) / 32; j++) {
+				if ((TileMap[i][j] == 'W' || TileMap[i][j] == 'R' || TileMap[i][j] == '1')) {
+					if (dx > 0) { rect.left = j * 32 - rect.width; dx *= -1; }
+					else if (dx < 0) { rect.left = j * 32 + 32;  dx *= -1; }
 				}
+
+			}
 	}
 };
 
@@ -271,8 +271,9 @@ int main() {
 
 	PLAYER p(t);
 	ENEMY enemy_1;
-
-	enemy_1.set(enemy1, 400, 440);
+	ENEMY enemy_2;
+	enemy_1.set(enemy1, 500, 300);
+	enemy_2.set(enemy1, 500, 440);
 	p.set(t, 100, 400);
 
 
@@ -322,6 +323,7 @@ int main() {
 		p.update(time);
 
 		enemy_1.update(time, p);
+		enemy_2.update(time, p);
 
 		if (p.rect.left > 800 / 2) offsetX = p.rect.left - 800 / 2;
 
@@ -334,32 +336,37 @@ int main() {
 
 		for (int i = 0; i < H; i++)
 			for (int j = 0; j < W; j++) {
-
-				if (TileMap[i][j] == '1') { tile1.setTextureRect(IntRect(144, 21, 32, 64)); tile1.setScale(1, 1); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
+				if (TileMap[i][j] == '0') { tile1.setTextureRect(IntRect(65, 65, 10, 10)); tile1.setScale(45, 45); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
+				if (TileMap[i][j] == '1') { tile1.setTextureRect(IntRect(144, 21, 32, 68)); tile1.setScale(1, 1); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 				if (TileMap[i][j] == '2') { tile1.setTextureRect(IntRect(335, 15, 32, 32)); tile1.setScale(2, 2); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 				if (TileMap[i][j] == '3') { tile1.setTextureRect(IntRect(224, 176, 47, 117)); tile1.setScale(1.4, 1.5); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 				if (TileMap[i][j] == '4') {
-					tile1.setTextureRect(IntRect(105, 175, 45, 15)); 
-					tile1.setScale(1, 1); 
-					tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY+20); 
+					tile1.setTextureRect(IntRect(105, 175, 45, 15));
+					tile1.setScale(1, 1);
+					tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY + 20);
 					window.draw(tile1);
 
 					tile1.setTextureRect(IntRect(323, 96, 22, 88));
 					tile1.setScale(1, 1);
-					tile1.setPosition(j * 32 - offsetX + 18, i * 32 - offsetY+time * 0.4);
+					tile1.setPosition(j * 32 - offsetX + 17, i * 32 - offsetY - 15);
 					window.draw(tile1);
 				}
+				if (TileMap[i][j] == '5') { tile1.setTextureRect(IntRect(160, 96, 46, 30)); tile1.setScale(3, 3.3); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
+
+
+				if (TileMap[i][j] == 'R') { tile1.setTextureRect(IntRect(15, 15, 15, 50)); tile1.setScale(2, 1); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 
 				if (TileMap[i][j] == 'B') { tile.setTextureRect(IntRect(176, 16, 64, 40)); tile.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile); }
 
-				if (TileMap[i][j] == 'H') { tile.setTextureRect(IntRect(272, 16, 64, 40)); tile.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile);}
+				if (TileMap[i][j] == 'H') { tile.setTextureRect(IntRect(272, 16, 64, 40)); tile.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile); }
 
 				if (TileMap[i][j] == ' ' || TileMap[i][j] == 'W') continue;
-	
+
 			}
 
 		window.draw(p.sprite);
 		window.draw(enemy_1.sprite);
+		window.draw(enemy_2.sprite);
 		window.display();
 
 	}
