@@ -15,7 +15,7 @@ float speed_y = -0.4;
 int timeset = 400;
 
 const int H = 16;				 //		Настройки игрового процесса
-const int W = 80;
+const int W = 100;
 
 const int BD_HEIGHT = 150;
 
@@ -27,22 +27,22 @@ float f_buildings_speed = 0.01f;
 float offsetX, offsetY;
 
 String TileMap[H] = {
-	"WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
-	"W                                                                              W",
-	"W                                                                              W",
-	"W                                                                              W",
-	"W                                                                              W",
-	"W                                                                              W",
-	"W                                                                              W",		  //		Расположение плиток
-	"W            10   2222222222                                                   W",
-	"W            15        1   R                                                   W",
-	"W            1         1   R                                                   W",
-	"W            1 4       1   R      R222222222                                   W",
-	"W            12222222221   R      R5       1                                   W",
-	"W            1       3 1   R      R        1                                   W",
-	"W            1         1   R      R        1                                   W",
-	"W            1         1   R      R        1                                   W",
-	"BWBWBWHWBWBWBWBWBWBWBWBWBWBWHWHWHWBWBWBWBWBWHWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBW",
+	"WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+	"W                              R                1                                                  W",
+	"W                              R                1                                                  W",
+	"W                              R                1                                                  W",
+	"W                              R                1                                                  W",
+	"W                              R                1                                                  W",
+	"W                              R                1                                                  W",		  //		Расположение плиток
+	"W            R0   2222222222   R  4             1                                                  W",
+	"W            R5        1   R   R22222222222222222                                                  W",
+	"W            R         1   R   0  0             R                                                  W",
+	"W            R 4       1   R                    R                                                  W",
+	"W            R2222222221   R   R222222222       R2222222                                           W",
+	"W            1       3 1   R   R        1       1                                                  W",
+	"W            1         1   R   R        1       1                                                  W",
+	"W            1         1   R   R  4     1       1                                                  W",
+	"BWBWBWHWBWBWBWBWBWBWBWBWBWBWHWHWHWBWBWBWBWBWHWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBWBW",
 };
 
 
@@ -65,6 +65,7 @@ public:
 
 	void update(float time) {
 		rect.left += dx * time;
+		printf("%f\t%f\n", sprite.getPosition().x, sprite.getPosition().y);
 		Collision(0);
 		if (!onGround) dy = dy + 0.0005 * time;
 		rect.top += dy * time;
@@ -129,7 +130,9 @@ public:
 		currentFrame = 0;
 		alive = true;
 	}
-
+	void beating(int dir, float time) {
+		rect.left += 0.05 * time * dir;
+	}
 
 };
 
@@ -272,8 +275,13 @@ int main() {
 	PLAYER p(t);
 	ENEMY enemy_1;
 	ENEMY enemy_2;
+	ENEMY enemy_3;
+	ENEMY enemy_4;
+
 	enemy_1.set(enemy1, 500, 300);
 	enemy_2.set(enemy1, 500, 440);
+	enemy_3.set(enemy1, 1030, 210);
+	enemy_4.set(enemy1, 1300, 210);
 	p.set(t, 100, 400);
 
 
@@ -316,6 +324,11 @@ int main() {
 			if (p.onGround) { p.dy = speed_y; p.onGround = false; }
 		}
 
+
+		if (Mouse::isButtonPressed(Mouse::Left)) {
+			if (Mouse::getPosition().x < p.sprite.getPosition().x) p.beating(-1, time);
+			else p.beating(1, time);
+		}
 		if (Keyboard::isKeyPressed(Keyboard::Escape)) {
 			window.close();
 		}
@@ -324,6 +337,8 @@ int main() {
 
 		enemy_1.update(time, p);
 		enemy_2.update(time, p);
+		enemy_3.update(time, p);
+		enemy_4.update(time, p);
 
 		if (p.rect.left > 800 / 2) offsetX = p.rect.left - 800 / 2;
 
@@ -354,7 +369,7 @@ int main() {
 				if (TileMap[i][j] == '5') { tile1.setTextureRect(IntRect(160, 96, 46, 30)); tile1.setScale(3, 3.3); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 
 
-				if (TileMap[i][j] == 'R') { tile1.setTextureRect(IntRect(15, 15, 15, 50)); tile1.setScale(2, 1); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
+				if (TileMap[i][j] == 'R') { tile1.setTextureRect(IntRect(15, 15, 18, 33)); tile1.setScale(2, 1); tile1.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile1); }
 
 				if (TileMap[i][j] == 'B') { tile.setTextureRect(IntRect(176, 16, 64, 40)); tile.setPosition(j * 32 - offsetX, i * 32 - offsetY); window.draw(tile); }
 
@@ -367,6 +382,8 @@ int main() {
 		window.draw(p.sprite);
 		window.draw(enemy_1.sprite);
 		window.draw(enemy_2.sprite);
+		window.draw(enemy_3.sprite);
+		window.draw(enemy_4.sprite);
 		window.display();
 
 	}
