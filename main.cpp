@@ -64,18 +64,18 @@ public:
 		Collision(0);
 		if (!onGround) dy = dy + 0.0005 * time;
 		rect.top += dy * time;
-		onGround = false;																				
-		Collision(1);																					
-																										
-		currentFrame += 0.005 * time;																	
+		onGround = false;
+		Collision(1);
+
+		currentFrame += 0.005 * time;
 		if (currentFrame > 10) currentFrame -= 8;
 
 		if (dx > 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame), 295, 40, 40)); last_dir = 'r'; };
 		if (dx < 0) { sprite.setTextureRect(IntRect(45 * int(currentFrame) + 40, 295, -40, 40)); last_dir = 'l'; };
 		if (!dx && last_dir == 'r') sprite.setTextureRect(IntRect(45, 25, 30, 40));
-		if (!dx && last_dir == 'l' ) sprite.setTextureRect(IntRect(45+30, 25, -30, 40));
+		if (!dx && last_dir == 'l') sprite.setTextureRect(IntRect(45 + 30, 25, -30, 40));
 		if (dy != 0 && last_dir == 'r') sprite.setTextureRect(IntRect(40, 650, 30, 40));
-		if (dy != 0 && last_dir == 'l') sprite.setTextureRect(IntRect(40+30, 650, -30, 40));
+		if (dy != 0 && last_dir == 'l') sprite.setTextureRect(IntRect(40 + 30, 650, -30, 40));
 
 
 		sprite.setPosition(rect.left - offsetX, rect.top);
@@ -105,8 +105,8 @@ public:
 		dx = 0.1;
 		currentFrame = 0;
 	}
-	
-	
+
+
 };
 
 class ENEMY {
@@ -134,10 +134,12 @@ public:
 		if (abs(rect.top - p.rect.top) < 64 and abs(rect.left - p.rect.left) < 32 * 14 and abs(rect.left - p.rect.left) > 0) {
 			if (rect.left > p.rect.left) {
 				dx = -0.05;
-			} else {
+			}
+			else {
 				dx = +0.05;
 			}
-		} else {
+		}
+		else {
 			dx = 0;
 		}
 
@@ -160,7 +162,8 @@ public:
 				if (int(currentFrame) == 6) sprite.setTextureRect(IntRect(526, 210, -50, 50));
 				if (int(currentFrame) == 7) sprite.setTextureRect(IntRect(579, 210, -50, 50));
 				dx = 0;
-			} else {
+			}
+			else {
 				if (int(currentFrame) == 0) sprite.setTextureRect(IntRect(10, 210, -55, 50));
 				if (int(currentFrame) == 1) sprite.setTextureRect(IntRect(60, 210, -50, 50));
 				if (int(currentFrame) == 2) sprite.setTextureRect(IntRect(115, 210, -50, 50));
@@ -301,7 +304,7 @@ int main() {
 		}
 
 		p.update(time);
-		
+
 		enemy_1.update(time, p);
 
 		if (p.rect.left > 800 / 3) offsetX = p.rect.left - 800 / 3;
